@@ -1,0 +1,10 @@
+{
+    "version": 1,
+    "owner": "0xOwnerAddressExample0000000000000000000000",
+    "signed": true,
+    "entries": {
+        "designer": "0xabc0000000000000000000000000000000000000",
+        "vendor": "0xdef0000000000000000000000000000000000000"
+    },
+    "timestamp": 1730000000
+}
