@@ -3,21 +3,14 @@ import { ThemeToggle } from "./theme-toggle";
 
 export function SiteFooter() {
   return (
-    <footer className="bg-background border-t py-6 md:py-0">
-      <div className="container flex flex-col md:flex-row items-center justify-between gap-4 md:h-24">
-        <p className="text-balance text-center md:text-left text-sm leading-loose text-muted-foreground">
-          Built by{" "}
-          <a
-            href={siteConfig.links.twitter}
-            target="_blank"
-            rel="noreferrer"
-            className="font-medium underline underline-offset-4"
-          >
-            kiv1n
-          </a>{" "}
-          © 2025
-        </p>
-        <ThemeToggle />
+    <footer className="border-t border-border bg-background/50">
+      <div className="container max-w-6xl mx-auto px-4 py-12 md:py-16">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          <p className="text-sm text-muted-foreground">
+            TrustFlow — Guard-railed AI payments with programmable money
+          </p>
+          <ThemeToggle />
+        </div>
       </div>
     </footer>
   );

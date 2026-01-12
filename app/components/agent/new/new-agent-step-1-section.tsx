@@ -10,7 +10,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import useError from "@/hooks/use-error";
 import { NewAgentRequestData } from "@/types/new-agent-request-data";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -59,63 +58,95 @@ export function NewAgentStep1Section(props: {
   }
 
   return (
-    <main className="container py-16 lg:px-80">
-      <div className="flex items-center justify-center size-24 rounded-full bg-primary">
-        <UserIcon className="size-12 text-primary-foreground" />
+    <main className="min-h-screen flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md space-y-8">
+        {/* Header */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-accent/10 border border-accent/20">
+            <UserIcon className="w-6 h-6 text-accent" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl md:text-3xl font-bold">Create Your Agent</h1>
+            <p className="text-sm text-muted-foreground">Step 1 of 5 — Tell us who this agent is for</p>
+          </div>
+        </div>
+
+        {/* Form */}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel className="text-sm font-medium">Name *</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g., Mary"
+                      disabled={isProsessing}
+                      {...field}
+                      className="h-10"
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel className="text-sm font-medium">Email *</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder="mary@example.com"
+                      disabled={isProsessing}
+                      {...field}
+                      className="h-10"
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+
+            <Button
+              type="submit"
+              disabled={isProsessing}
+              className="w-full h-10"
+            >
+              {isProsessing ? (
+                <>
+                  <Loader2Icon className="w-4 h-4 animate-spin mr-2" />
+                  Creating...
+                </>
+              ) : (
+                <>
+                  Next Step
+                  <ArrowRightIcon className="w-4 h-4 ml-2" />
+                </>
+              )}
+            </Button>
+          </form>
+        </Form>
+
+        {/* Progress */}
+        <div className="flex gap-1 pt-4">
+          {[1, 2, 3, 4, 5].map((step) => (
+            <div
+              key={step}
+              className={`h-1 flex-1 rounded-full ${
+                step === 1
+                  ? "bg-accent"
+                  : "bg-border"
+              }`}
+            />
+          ))}
+        </div>
       </div>
-      <h1 className="text-4xl md:text-5xl font-extrabold tracking-tighter mt-2">
-        Step #1
-      </h1>
-      <p className="text-muted-foreground mt-1">
-        Who are you creating this agent for?
-      </p>
-      <Separator className="my-8" />
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name *</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Mary"
-                    disabled={isProsessing}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email *</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="mary@site.com"
-                    disabled={isProsessing}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button type="submit" variant="default" disabled={isProsessing}>
-            {isProsessing ? (
-              <Loader2Icon className="animate-spin" />
-            ) : (
-              <ArrowRightIcon />
-            )}
-            Next step
-          </Button>
-        </form>
-      </Form>
     </main>
   );
 }

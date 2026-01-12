@@ -42,9 +42,13 @@ export const TransferErc20Schema = z
       .describe(
         "The name of a person or organization to transfer the funds from the address book"
       ),
+    tokenSymbol: z
+      .string()
+      .optional()
+      .describe("The symbol of the token being transferred (e.g., MNEE, USDT, USDC)"),
   })
   .strip()
-  .describe("Instructions for transferring ERC20 assets");
+  .describe("Instructions for transferring ERC20 assets including stablecoins");
 
 /**
  * Input schema for create ERC20 action.
@@ -57,3 +61,24 @@ export const CreateErc20Schema = z
   })
   .strip()
   .describe("Instructions for transferring ERC20 assets");
+
+
+export const ExecuteMneePaymentSchema = z.object({
+  amount: z.number().describe("Amount of MNEE to send"),
+  recipientName: z.string().describe(
+    "Approved counterparty name from encrypted address book"
+  ),
+});
+
+/**
+ * Input schema for execute policy-constrained payment with any stablecoin.
+ */
+export const ExecuteStablecoinPaymentSchema = z.object({
+  amount: z.number().describe("Amount of stablecoin to send"),
+  recipientName: z.string().describe(
+    "Approved counterparty name from encrypted address book"
+  ),
+  stablecoin: z
+    .enum(["MNEE", "USDT", "USDC"])
+    .describe("The stablecoin to use for payment (MNEE, USDT, or USDC)"),
+});

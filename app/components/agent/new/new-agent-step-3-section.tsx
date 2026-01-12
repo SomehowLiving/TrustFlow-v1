@@ -9,7 +9,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -17,15 +16,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import useError from "@/hooks/use-error";
 import { NewAgentRequestData } from "@/types/new-agent-request-data";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRightIcon, Loader2Icon, SettingsIcon } from "lucide-react";
+import { ArrowRightIcon, Loader2Icon, NetworkIcon } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { baseSepolia } from "viem/chains";
 import { z } from "zod";
+import { getSupportedNetworks, getAvailableStablecoinsForNetwork } from "@/utils/stablecoin";
+import { stablecoinsConfig, chainsConfig } from "@/config/site";
 
 export function NewAgentStep3Section(props: {
   newAgentRequestData: NewAgentRequestData;
@@ -35,28 +34,39 @@ export function NewAgentStep3Section(props: {
 }) {
   const { handleError } = useError();
   const [isProsessing, setIsProsessing] = useState(false);
+  const [selectedChainId, setSelectedChainId] = useState<number | null>(null);
+  
+  const networks = getSupportedNetworks();
+  const availableStablecoins = selectedChainId 
+    ? getAvailableStablecoinsForNetwork(selectedChainId)
+    : [];
 
   const formSchema = z.object({
-    id: z.string().min(1),
-    usdtAddress: z.string().length(42),
+    chainId: z.string().min(1),
+    stablecoin: z.string().min(1),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      id: baseSepolia.id.toString(),
-      usdtAddress: "0x1b21550f42e993d1b692d18d79bcd783638633f2",
+      chainId: networks[0]?.chainId.toString() || "",
+      stablecoin: "MNEE",
     },
   });
 
   async function handleSubmit(values: z.infer<typeof formSchema>) {
     try {
       setIsProsessing(true);
+      const chainId = Number(values.chainId);
+      const networkConfig = chainsConfig.find((c) => c.chain.id === chainId);
+      const tokenAddress = networkConfig?.contracts.tokens[values.stablecoin as keyof typeof networkConfig.contracts.tokens];
+      
       props.onNewAgentRequestDataUpdate({
         ...props.newAgentRequestData,
         chain: {
-          id: Number(values.id),
-          usdtAddress: values.usdtAddress,
+          id: chainId,
+          stablecoin: values.stablecoin,
+          tokenAddress: tokenAddress || "",
         },
       });
     } catch (error) {
@@ -67,73 +77,125 @@ export function NewAgentStep3Section(props: {
   }
 
   return (
-    <main className="container py-16 lg:px-80">
-      <div className="flex items-center justify-center size-24 rounded-full bg-primary">
-        <SettingsIcon className="size-12 text-primary-foreground" />
-      </div>
-      <h1 className="text-4xl md:text-5xl font-extrabold tracking-tighter mt-2">
-        Step #3
-      </h1>
-      <p className="text-muted-foreground mt-1">
-        Specify the preferred chain and contract address of the USD token to be
-        used by the agent
-      </p>
-      <Separator className="my-8" />
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Chain *</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a chain" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value={baseSepolia.id.toString()}>
-                      {baseSepolia.name}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="usdtAddress"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>USD token address *</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="0x0000000000000000000000000000000000000000"
-                    disabled={isProsessing}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    <main className="min-h-screen flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md space-y-8">
+        {/* Header */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-accent/10 border border-accent/20">
+            <NetworkIcon className="w-6 h-6 text-accent" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl md:text-3xl font-bold">Network & Stablecoin</h1>
+            <p className="text-sm text-muted-foreground">Step 3 of 5 — Select where to deploy and which stablecoin to use</p>
+          </div>
+        </div>
 
-          <Button type="submit" variant="default" disabled={isProsessing}>
-            {isProsessing ? (
-              <Loader2Icon className="animate-spin" />
-            ) : (
-              <ArrowRightIcon />
-            )}
-            Next step
-          </Button>
-        </form>
-      </Form>
+        {/* Form */}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="chainId"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel className="text-sm font-medium">Blockchain Network *</FormLabel>
+                  <Select
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      setSelectedChainId(Number(value));
+                      const newAvailable = getAvailableStablecoinsForNetwork(Number(value));
+                      if (newAvailable.length > 0) {
+                        form.setValue("stablecoin", newAvailable[0]);
+                      }
+                    }}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="h-10">
+                        <SelectValue placeholder="Select a network" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {networks.map((network) => (
+                        <SelectItem key={network.chainId} value={network.chainId.toString()}>
+                          {network.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="stablecoin"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel className="text-sm font-medium">Settlement Currency *</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    disabled={availableStablecoins.length === 0}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="h-10">
+                        <SelectValue placeholder="Select a stablecoin" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {availableStablecoins.map((coin) => {
+                        const config = stablecoinsConfig[coin as keyof typeof stablecoinsConfig];
+                        return (
+                          <SelectItem key={coin} value={coin}>
+                            {config.symbol} — {config.name}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+
+            <Button
+              type="submit"
+              disabled={isProsessing || availableStablecoins.length === 0}
+              className="w-full h-10"
+            >
+              {isProsessing ? (
+                <>
+                  <Loader2Icon className="w-4 h-4 animate-spin mr-2" />
+                  Configuring...
+                </>
+              ) : (
+                <>
+                  Next Step
+                  <ArrowRightIcon className="w-4 h-4 ml-2" />
+                </>
+              )}
+            </Button>
+          </form>
+        </Form>
+
+        {/* Progress */}
+        <div className="flex gap-1 pt-4">
+          {[1, 2, 3, 4, 5].map((step) => (
+            <div
+              key={step}
+              className={`h-1 flex-1 rounded-full ${
+                step === 3
+                  ? "bg-accent"
+                  : step < 3
+                  ? "bg-accent/30"
+                  : "bg-border"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
     </main>
   );
 }

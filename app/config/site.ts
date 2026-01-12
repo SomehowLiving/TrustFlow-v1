@@ -1,11 +1,36 @@
 export type SiteConfig = typeof siteConfig;
 
 export const siteConfig = {
-  name: "Agent 4 Your Mom",
+  name: "TrustFlow",
   description:
-    "A platform for creating personalized AI agents with crypto features for your mom or other not-techie users",
+    "Guard-railed AI agents with policy-constrained programmable money. Safe autonomous payments using MNEE, USDT, and other stablecoins across multiple networks",
   links: {
-    github: "https://github.com/web3goals/agent-4-your-mom-prototype",
-    twitter: "https://twitter.com/kiv1n",
+    github: "https://github.com/SomehowLiving/TrustFlow-v1",
+    twitter: "https://twitter.com",
   },
 };
+
+// Supported stablecoins configuration
+export const stablecoinsConfig = {
+  MNEE: {
+    name: "MNEE",
+    symbol: "MNEE",
+    description: "USD-backed stablecoin",
+    decimals: 18,
+  },
+  USDT: {
+    name: "Tether USD",
+    symbol: "USDT",
+    description: "USDT Stablecoin",
+    decimals: 6,
+  },
+  USDC: {
+    name: "USD Coin",
+    symbol: "USDC",
+    description: "USDC Stablecoin",
+    decimals: 6,
+  },
+};
+
+// Re-export chains config for convenience
+export { chainsConfig, getNetworkConfig } from "./chains";

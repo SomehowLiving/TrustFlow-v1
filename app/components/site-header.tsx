@@ -2,8 +2,7 @@
 
 import { siteConfig } from "@/config/site";
 import { usePrivy } from "@privy-io/react-auth";
-import { GithubIcon, LogInIcon, LogOutIcon, MenuIcon } from "lucide-react";
-import Image from "next/image";
+import { GithubIcon, LogInIcon, LogOutIcon, MenuIcon, ShieldIcon } from "lucide-react";
 import Link from "next/link";
 import { Button } from "./ui/button";
 import {
@@ -19,59 +18,48 @@ export function SiteHeader() {
   const { ready, authenticated, user, login, logout } = usePrivy();
 
   return (
-    <header className="sticky top-0 z-40 bg-card border-b">
-      <div className="container flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
-        {/* Left part */}
-        <div className="flex gap-6 md:gap-10">
-          <Link href="/" className="flex items-center space-x-3">
-            <div className="flex flex-col items-center size-9">
-              <Image
-                src="/images/icon.png"
-                alt="Icon"
-                priority={false}
-                width="100"
-                height="100"
-                sizes="100vw"
-                className="w-full rounded-xl"
-              />
-            </div>
-            <span className="text-foreground font-bold">{siteConfig.name}</span>
-          </Link>
-        </div>
-        {/* Right part */}
-        <div className="flex flex-1 items-center justify-end gap-4">
+    <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b border-border">
+      <div className="container max-w-6xl mx-auto flex h-16 items-center justify-between px-4">
+        {/* Left: Logo */}
+        <Link href="/" className="flex items-center gap-2.5">
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-accent">
+            <ShieldIcon className="w-4.5 h-4.5 text-primary-foreground" />
+          </div>
+          <span className="text-base font-semibold hidden sm:inline text-foreground">{siteConfig.name}</span>
+        </Link>
+
+        {/* Right: Menu */}
+        <div className="flex items-center gap-2">
           <DropdownMenu>
-            <DropdownMenuTrigger
-              className="text-sm font-medium text-muted-foreground"
-              asChild
-            >
-              <Button variant="ghost" size="icon">
-                <MenuIcon />
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9">
+                <MenuIcon className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
+            <DropdownMenuContent align="end" className="w-48">
               {ready && !authenticated && (
-                <DropdownMenuItem onClick={() => login()}>
-                  <LogInIcon />
-                  <span>Login</span>
+                <DropdownMenuItem onClick={() => login()} className="cursor-pointer">
+                  <LogInIcon className="w-4 h-4 mr-2" />
+                  Sign In
                 </DropdownMenuItem>
               )}
               {ready && authenticated && (
-                <DropdownMenuItem onClick={() => logout()}>
-                  <LogOutIcon />
-                  <span>
-                    Logout{" "}
-                    <p className="text-xs text-muted-foreground">
-                      {privyUserToEmail(user)}
-                    </p>
-                  </span>
-                </DropdownMenuItem>
+                <>
+                  <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+                    {privyUserToEmail(user)}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => logout()} className="cursor-pointer text-destructive">
+                    <LogOutIcon className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </>
               )}
               <DropdownMenuSeparator />
               <Link href={siteConfig.links.github} target="_blank">
-                <DropdownMenuItem>
-                  <GithubIcon />
-                  <span>GitHub</span>
+                <DropdownMenuItem className="cursor-pointer">
+                  <GithubIcon className="w-4 h-4 mr-2" />
+                  GitHub
                 </DropdownMenuItem>
               </Link>
             </DropdownMenuContent>

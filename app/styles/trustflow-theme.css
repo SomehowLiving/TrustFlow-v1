@@ -1,0 +1,104 @@
+/* TrustFlow Color Palette & Typography */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        /* Dark Mode (Default) */
+        --background: 12 6 20;
+        /* #0B0F14 */
+        --foreground: 229 231 235;
+        /* #E5E7EB */
+        --card: 15 23 42;
+        /* #0F172A */
+        --card-foreground: 229 231 235;
+        /* #E5E7EB */
+        --popover: 15 23 42;
+        /* #0F172A */
+        --popover-foreground: 229 231 235;
+        /* #E5E7EB */
+        --muted: 156 163 175;
+        /* #9CA3AF */
+        --muted-foreground: 156 163 175;
+        /* #9CA3AF */
+        --accent: 14 165 233;
+        /* #0EA5E4 - Teal primary */
+        --destructive: 239 68 68;
+        /* #EF4444 */
+        --border: 31 41 55;
+        /* #1F2937 */
+        --input: 31 41 55;
+        /* #1F2937 */
+        --primary: 14 165 233;
+        /* #0EA5E4 */
+        --primary-foreground: 15 23 42;
+        /* #0F172A */
+        --secondary: 71 85 105;
+        /* #475569 */
+        --secondary-foreground: 229 231 235;
+        /* #E5E7EB */
+        --ring: 14 165 233;
+        /* #0EA5E4 */
+    }
+
+    @media (prefers-color-scheme: light) {
+        :root {
+            /* Light Mode */
+            --background: 249 250 251;
+            /* #F9FAFB */
+            --foreground: 15 23 42;
+            /* #0F172A */
+            --card: 255 255 255;
+            /* #FFFFFF */
+            --card-foreground: 15 23 42;
+            /* #0F172A */
+            --popover: 255 255 255;
+            /* #FFFFFF */
+            --popover-foreground: 15 23 42;
+            /* #0F172A */
+            --muted: 107 114 128;
+            /* #6B7280 */
+            --muted-foreground: 107 114 128;
+            /* #6B7280 */
+            --accent: 14 165 233;
+            /* #0EA5E4 - Teal primary */
+            --destructive: 239 68 68;
+            /* #EF4444 */
+            --border: 229 231 235;
+            /* #E5E7EB */
+            --input: 243 244 246;
+            /* #F3F4F6 */
+            --primary: 14 165 233;
+            /* #0EA5E4 */
+            --primary-foreground: 255 255 255;
+            /* #FFFFFF */
+            --secondary: 203 213 225;
+            /* #CBD5E1 */
+            --secondary-foreground: 15 23 42;
+            /* #0F172A */
+            --ring: 14 165 233;
+            /* #0EA5E4 */
+        }
+    }
+
+    body {
+        @apply bg-background text-foreground;
+    }
+
+    h1 {
+        @apply text-3xl md:text-4xl font-bold tracking-tight;
+    }
+
+    h2 {
+        @apply text-2xl md:text-3xl font-semibold tracking-tight;
+    }
+
+    h3 {
+        @apply text-xl font-semibold tracking-tight;
+    }
+
+    p {
+        @apply text-base text-muted-foreground leading-relaxed;
+    }
+}

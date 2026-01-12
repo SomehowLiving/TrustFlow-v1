@@ -2,9 +2,10 @@ import { Loader2Icon } from "lucide-react";
 
 export function LoadingSection() {
   return (
-    <main className="container py-16 lg:px-80">
-      <div className="flex flex-col items-center">
-        <Loader2Icon className="animate-spin text-primary" />
+    <main className="min-h-screen flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <Loader2Icon className="w-8 h-8 animate-spin text-accent" />
+        <p className="text-sm text-muted-foreground">Loading...</p>
       </div>
     </main>
   );

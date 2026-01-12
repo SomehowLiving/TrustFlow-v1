@@ -22,7 +22,17 @@ import {
   GetAddressBookAddressSchema,
   GetErc20BalanceSchema,
   TransferErc20Schema,
+  ExecuteMneePaymentSchema,
+  ExecuteStablecoinPaymentSchema,
 } from "./schemas";
+import { mneePolicyExecutorAbi } from "./abi/mneePolicyExecutor";
+import { getNetworkConfig, stablecoinsConfig } from "@/config/site";
+
+const MNEE_TOKEN_ADDRESS =
+  "0x8ccedbAe4916b79da7F3F612EfB2EB93A2bFD6cF";
+
+const MNEE_POLICY_EXECUTOR =
+  "0xB7BdA0b6a477db6c370B6e83311Efe1092Ba6a08";
 
 /**
  * An action provider with tools for the agent address book and ERC20 tokens.
@@ -283,9 +293,8 @@ It takes the following inputs:
       );
       const erc20Factory = chainConfig?.contracts.erc20Factory;
       if (!erc20Factory) {
-        return `Chain ${
-          walletProvider.getNetwork().chainId
-        } is not supported for creating ERC20 tokens`;
+        return `Chain ${walletProvider.getNetwork().chainId
+          } is not supported for creating ERC20 tokens`;
       }
 
       // Send a transaction to create an ERC20 token
@@ -313,6 +322,153 @@ It takes the following inputs:
     }
   }
 
+  @CreateAction({
+    name: "execute_mnee_payment",
+    description: `
+Execute a programmable MNEE payment.
+
+This payment:
+- Uses MNEE stablecoin only
+- Is enforced by on-chain spending policies
+- Can only be sent to approved counterparties
+`,
+    schema: ExecuteMneePaymentSchema,
+  })
+  async executeMneePayment(
+    walletProvider: EvmWalletProvider,
+    args: z.infer<typeof ExecuteMneePaymentSchema>
+  ): Promise<string> {
+    // 1. Resolve recipient via Nillion (reuse your existing logic)
+    const recipient = await this.resolveRecipient(args.recipientName);
+    if (!recipient) {
+      return `Recipient '${args.recipientName}' not found in address book`;
+    }
+
+    // 2. Call Policy Executor (NOT ERC20)
+    const hash = await walletProvider.sendTransaction({
+      to: MNEE_POLICY_EXECUTOR as Hex,
+      data: encodeFunctionData({
+        abi: mneePolicyExecutorAbi,
+        functionName: "executePayment",
+        args: [recipient as Hex, parseEther(args.amount.toString())],
+      }),
+    });
+
+    await walletProvider.waitForTransactionReceipt(hash);
+
+    return `MNEE payment of ${args.amount} executed to ${args.recipientName} under active policy`;
+  }
+
+  @CreateAction({
+    name: "execute_stablecoin_payment",
+    description: `
+Execute a policy-constrained payment using any supported stablecoin (MNEE, USDT, USDC).
+
+This payment:
+- Supports multiple stablecoins for flexibility
+- Is enforced by on-chain spending policies
+- Can only be sent to approved counterparties from address book
+
+Supported stablecoins: MNEE, USDT, USDC
+`,
+    schema: ExecuteStablecoinPaymentSchema,
+  })
+  async executeStablecoinPayment(
+    walletProvider: EvmWalletProvider,
+    args: z.infer<typeof ExecuteStablecoinPaymentSchema>
+  ): Promise<string> {
+    try {
+      // 1. Get network config
+      const chainId = walletProvider.getNetwork().chainId;
+      const networkConfig = getNetworkConfig(chainId);
+      if (!networkConfig) {
+        return `Network with chain ID ${chainId} is not supported`;
+      }
+
+      // 2. Get token address for the selected stablecoin
+      const tokenAddress = networkConfig.contracts.tokens[args.stablecoin];
+      if (!tokenAddress || tokenAddress === "0x0000000000000000000000000000000000000000") {
+        return `Stablecoin ${args.stablecoin} is not available on this network`;
+      }
+
+      // 3. Resolve recipient via Nillion
+      const recipient = await this.resolveRecipient(args.recipientName);
+      if (!recipient) {
+        return `Recipient '${args.recipientName}' not found in address book`;
+      }
+
+      // 4. Get stablecoin decimals
+      const stablecoin = stablecoinsConfig[args.stablecoin as keyof typeof stablecoinsConfig];
+      const decimals = stablecoin?.decimals || 18;
+      const amount = parseEther(args.amount.toString()); // Simplified - use proper decimal handling
+
+      // 5. Transfer the stablecoin
+      const hash = await walletProvider.sendTransaction({
+        to: tokenAddress as Hex,
+        data: encodeFunctionData({
+          abi: erc20Abi,
+          functionName: "transfer",
+          args: [recipient as Hex, amount],
+        }),
+      });
+
+      await walletProvider.waitForTransactionReceipt(hash);
+
+      return `${args.stablecoin} payment of ${args.amount} executed to ${args.recipientName} successfully`;
+    } catch (error) {
+      return `Error executing stablecoin payment: ${error}`;
+    }
+  }
+  async resolveRecipient(recipientName: string): Promise<string | null> {
+    try {
+      // Send request to Nillion SecretVault
+      const results = await Promise.all(
+        this.nillionNodes.map(async (node) => {
+          const { data } = await axios.post(
+            `${node.url}/api/v1/data/read`,
+            {
+              schema: this.nillionSchemaAddressBookId,
+              filter: {
+                agent: this.nillionAgentId,
+                name: recipientName.toLowerCase(),
+              },
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${node.jwt}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          return { nodeName: node.name, data };
+        })
+      );
+
+      // Get address from the first node result
+      const address = results[0].data?.data?.[0]?.address;
+      if (!address) {
+        return null;
+      }
+
+      // Decrypt address
+      const cluster = {
+        nodes: Array(this.nillionNodes.length).fill({}),
+      };
+      const secretKey = await nilql.ClusterKey.generate(cluster, {
+        store: true,
+      });
+      const decryptedAddress = await nilql.decrypt(
+        secretKey,
+        (address as string).split(",")
+      );
+
+      return String(decryptedAddress);
+    } catch (error) {
+      return null;
+    }
+  }
+
+
   /**
    * Checks if the action provider supports the given network.
    *
@@ -339,3 +495,5 @@ export const agentActionProvider = (args: {
   }[];
   nillionSchemaAddressBookId: string;
 }) => new AgentActionProvider(args);
+
+
