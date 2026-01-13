@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { ethers } from "ethers";
+import crypto from "crypto";
 
-const root = path.resolve(process.cwd(), "trustflow");
+const root = path.resolve(process.cwd());
 
 function saveJSON(filename: string, data: any) {
     const full = path.join(root, filename);
@@ -14,24 +15,48 @@ export async function POST(req: Request) {
     try {
         const body = await req.json();
         const { owner, message, signature } = body;
-        if (!owner || !message || !signature) {
+        if (!owner || message === undefined || !signature) {
             return NextResponse.json({ error: "missing fields" }, { status: 400 });
         }
 
-        // verify signature matches owner
+        // Ensure the client provided the exact signed string
+        if (typeof message !== "string") {
+            return NextResponse.json({ error: "message must be the exact signed string (type: string)" }, { status: 400 });
+        }
+
+        // Minimal diagnostic: compute sha256 of the message (do NOT expose the message)
+        const messageHash = crypto.createHash("sha256").update(message, "utf8").digest("hex");
+        console.info("AddressBook save: verifying signature", { owner, messageLength: message.length, messageHash });
+
+        // verify signature matches owner using the exact string provided by the client
         let recovered: string;
         try {
-            recovered = ethers.utils.verifyMessage(message, signature);
+            recovered = ethers.verifyMessage(message, signature);
+            console.info("Signature identity check", {
+                claimedOwner: owner,
+                recoveredSigner: recovered,
+                same: recovered.toLowerCase() === owner.toLowerCase(),
+            });
+
         } catch (e) {
-            return NextResponse.json({ error: "invalid signature format" }, { status: 400 });
+            console.warn("Signature verification failed (verifyMessage threw)", { owner, messageHash, err: String(e) });
+            return NextResponse.json({ error: "invalid signature format or signature does not match message" }, { status: 400 });
         }
 
         if (recovered.toLowerCase() !== owner.toLowerCase()) {
+            console.warn("Signature recovered address mismatch", { owner, recovered, messageHash });
             return NextResponse.json({ error: "signature does not match owner" }, { status: 403 });
         }
 
-        // persist addressbook container with explicit fields expected by execute route
-        const parsed = JSON.parse(message);
+        // Only after successful verification, parse the message JSON to extract entries
+        let parsed: any;
+        try {
+            parsed = JSON.parse(message);
+        } catch (e) {
+            console.warn("Signed message parsed but is not valid JSON", { owner, messageHash });
+            return NextResponse.json({ error: "signed message is not valid JSON" }, { status: 400 });
+        }
+
         const container = {
             owner,
             signedMessage: message,

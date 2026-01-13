@@ -4,8 +4,9 @@ import path from "path";
 import { MNEE_POLICY_EXECUTOR } from "../../../../constants";
 import { encodeFunctionData } from "viem";
 import { ethers } from "ethers";
+import crypto from "crypto";
 
-const root = path.resolve(process.cwd(), "trustflow");
+const root = path.resolve(process.cwd());
 
 function loadJSON(filename: string) {
     const full = path.join(root, filename);
@@ -95,13 +96,19 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "address book signature missing or incomplete" }, { status: 400 });
         }
 
+        // diagnostic hash of the signed message (do not expose actual message in responses)
+        const messageHash = crypto.createHash("sha256").update(signedMessage, "utf8").digest("hex");
+        console.info("Executing: verifying address book signature", { owner, messageLength: signedMessage.length, messageHash });
+
         let recovered: string;
         try {
-            recovered = ethers.utils.verifyMessage(signedMessage, signature);
+            recovered = ethers.verifyMessage(signedMessage, signature);
         } catch (e) {
+            console.warn("Address book signature verification failed", { owner, messageHash, err: String(e) });
             return NextResponse.json({ error: "address book signature invalid" }, { status: 403 });
         }
         if (recovered.toLowerCase() !== owner.toLowerCase()) {
+            console.warn("Address book signature does not match owner", { owner, recovered, messageHash });
             return NextResponse.json({ error: "address book signature does not match owner" }, { status: 403 });
         }
 

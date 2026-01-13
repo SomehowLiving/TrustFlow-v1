@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { BrowserProvider } from "ethers";
 
 function deterministicStringify(obj: any) {
   if (obj === null || typeof obj !== "object") return JSON.stringify(obj);
@@ -68,24 +69,22 @@ export default function SetupPage() {
 
       const serialized = deterministicStringify(message);
 
-      // use personal_sign where available
-      const provider = (window as any).ethereum;
-      let signature: string;
-      if (provider && provider.request) {
-        signature = await provider.request({
-          method: "personal_sign",
-          params: [serialized, address],
-        });
-      } else if ((window as any).signMessage) {
-        signature = await (window as any).signMessage(serialized);
-      } else {
-        throw new Error("No signer available");
-      }
+      // Create a signer instance and derive the owner from the actual signer
+      if (!(window as any).ethereum) throw new Error("No injected wallet found");
+      const provider = new BrowserProvider((window as any).ethereum as any);
+      const signer = await provider.getSigner();
+      const ownerFromSigner = await signer.getAddress();
+      console.log("SIGNER ADDRESS:", ownerFromSigner);
+
+      // Sign the exact serialized string and send that string as `message`
+      const signature = await signer.signMessage(serialized);
+
+      console.log("OWNER SENT TO BACKEND:", ownerFromSigner);
 
       const res = await fetch("/api/trustflow/addressbook/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ owner: address, message: JSON.stringify(message), signature }),
+        body: JSON.stringify({ owner: ownerFromSigner, message: serialized, signature }),
       });
       const j = await res.json();
       if (j.error) throw new Error(j.error);

@@ -1,11 +1,9 @@
 {
-    "version": 1,
-    "owner": "0xOwnerAddressExample0000000000000000000000",
-    "signedMessage": "{\n    \"version\":1,\n    \"entries\":{\n      \"designer\":\"0xabc0000000000000000000000000000000000000\",\n      \"vendor\":\"0xdef0000000000000000000000000000000000000\"\n    },\n    \"timestamp\":1730000000\n  }",
-    "signature": "",
-    "entries": {
-        "designer": "0xabc0000000000000000000000000000000000000",
-        "vendor": "0xdef0000000000000000000000000000000000000"
-    },
-    "timestamp": 1730000000
+  "owner": "0x4e656dA2f7e75d0d0d847b3aAbAD93364F8Eb652",
+  "signedMessage": "{\"domain\":\"TrustFlow\",\"entries\":{\"free\":\"0xF708059673F78fc8bB01CF56C315519312E58079\"},\"timestamp\":1768274864,\"version\":1}",
+  "signature": "0x1623f5115d672220cb7b1dfbf50ffa4e9149ea85ba68ad54f62d0f1807b06bd008f941010adadfde7c8dd35bdc30ccfbf6ecc88cf1e7cb8fae15651221737dff1c",
+  "entries": {
+    "free": "0xF708059673F78fc8bB01CF56C315519312E58079"
+  },
+  "timestamp": 1768274864
 }
