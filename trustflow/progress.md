@@ -16,6 +16,14 @@
 - Add authentication and agent key management for signing or agent identity delegation.
 - Integrate with the existing `AgentKit` flow (e.g., `prepareAgentkit.ts`) to demonstrate end-to-end agent-driven requests.
 
+## Completed Next Steps (this update)
+
+- **ABI Encoding:** API now uses `viem.encodeFunctionData` to produce production-correct calldata for `executePayment(address,uint256)` and returns the calldata as hex.
+- **Address Book Integrity:** API requires the address book to include `signedMessage` and `signature` fields and verifies the signature using `ethers.utils.verifyMessage` against the `owner` address before resolving recipients.
+- **Explicit Simulation Mode:** API responses now include `executionMode: "simulated"` and a clear explanation that MNEE is a real mainnet stablecoin and that settlement is intentionally not broadcast during the hackathon.
+- **OpenAI Intent Parsing:** Added optional natural-language parsing via OpenAI; the LLM is used only to extract `{ intent, recipient, amount }` and NEVER to resolve addresses, sign data, or execute transactions.
+- **Privy Representation:** Added `privy-stub.ts` documenting that Privy is used only for owner signing of the addressbook; Privy is not used for payments or broadcasting.
+
 ## How to try the prototype
 
 1. Start the Next.js app from the `trustflow` folder (standard dev start for the repo).

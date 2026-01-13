@@ -1,7 +1,8 @@
 {
     "version": 1,
     "owner": "0xOwnerAddressExample0000000000000000000000",
-    "signed": true,
+    "signedMessage": "{\n    \"version\":1,\n    \"entries\":{\n      \"designer\":\"0xabc0000000000000000000000000000000000000\",\n      \"vendor\":\"0xdef0000000000000000000000000000000000000\"\n    },\n    \"timestamp\":1730000000\n  }",
+    "signature": "",
     "entries": {
         "designer": "0xabc0000000000000000000000000000000000000",
         "vendor": "0xdef0000000000000000000000000000000000000"

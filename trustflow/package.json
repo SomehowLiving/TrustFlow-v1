@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint"
   },
+  "type": "module",
   "dependencies": {
     "@ai-sdk/openai": "^1.2.1",
     "@coinbase/agentkit": "latest",

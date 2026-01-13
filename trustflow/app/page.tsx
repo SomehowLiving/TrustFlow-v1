@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { useAgent } from "./hooks/useAgent";
 import ReactMarkdown from "react-markdown";
 
@@ -35,6 +36,20 @@ export default function Home() {
 
   return (
     <div className="flex flex-col flex-grow items-center justify-center text-black dark:text-white w-full h-full">
+      <div className="w-full max-w-2xl mb-4">
+        <div className="p-4 bg-white dark:bg-gray-800 shadow-sm rounded-lg">
+          <h2 className="text-lg font-semibold">TrustFlow Demo</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">
+            Owner signs an address book → AI interprets intents → execution is simulated and enforced by policy.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link href="/trustflow/setup" className="px-3 py-1 bg-[#0052FF] text-white rounded">Owner Setup</Link>
+            <Link href="/trustflow/intent" className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-black dark:text-white rounded">Intent Input</Link>
+            <Link href="/trustflow/interpretation" className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-black dark:text-white rounded">Interpretation</Link>
+            <Link href="/trustflow/execute" className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-black dark:text-white rounded">Execute (Sim)</Link>
+          </div>
+        </div>
+      </div>
       <div className="w-full max-w-2xl h-[70vh] bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4 flex flex-col">
         {/* Chat Messages */}
         <div className="flex-grow overflow-y-auto space-y-3 p-2">
